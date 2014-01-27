@@ -31,14 +31,8 @@ public class Query {
         ONLY_CONFLICTS     // _only_ documents in conflict will be returned. (This mode is especially useful for use with a CBLLiveQuery, so you can be notified of conflicts as they happen, i.e. when they're pulled in by a replication.)
     }
 
-    /**
-     * The database that contains this view.
-     */
     private Database database;
 
-    /**
-     * The view object associated with this query
-     */
     private View view;  // null for _all_docs query
 
     /**
@@ -46,100 +40,27 @@ public class Query {
      */
     private boolean temporaryView;
 
-    /**
-     * The number of initial rows to skip. Default value is 0.
-     * Should only be used with small values. For efficient paging, use startKey and limit.
-     */
     private int skip;
-
-    /**
-     * The maximum number of rows to return. Default value is 0, meaning 'unlimited'.
-     */
     private int limit = Integer.MAX_VALUE;
-
-    /**
-     * If non-nil, the key value to start at.
-     */
     private Object startKey;
-
-    /**
-     * If non-nil, the key value to end after.
-     */
     private Object endKey;
-
-    /**
-     * If non-nil, the document ID to start at.
-     * (Useful if the view contains multiple identical keys, making .startKey ambiguous.)
-     */
     private String startKeyDocId;
-
-    /**
-     * If non-nil, the document ID to end at.
-     * (Useful if the view contains multiple identical keys, making .endKey ambiguous.)
-     */
     private String endKeyDocId;
-
-    /**
-     * If set, the view will not be updated for this query, even if the database has changed.
-     * This allows faster results at the expense of returning possibly out-of-date data.
-     */
     private IndexUpdateMode indexUpdateMode;
-
-    /**
-     * Changes the behavior of a query created by -queryAllDocuments.
-     *
-     * - In mode kCBLAllDocs (the default), the query simply returns all non-deleted documents.
-     * - In mode kCBLIncludeDeleted, it also returns deleted documents.
-     * - In mode kCBLShowConflicts, the .conflictingRevisions property of each row will return the
-     *   conflicting revisions, if any, of that document.
-     * - In mode kCBLOnlyConflicts, _only_ documents in conflict will be returned.
-     *   (This mode is especially useful for use with a CBLLiveQuery, so you can be notified of
-     *   conflicts as they happen, i.e. when they're pulled in by a replication.)
-     */
     private AllDocsMode allDocsMode;
-
-    /**
-     * Should the rows be returned in descending key order? Default value is NO.
-     */
     private boolean descending;
-
-    /**
-     *  If set to YES, the results will include the entire document contents of the associated rows.
-     *  These can be accessed via QueryRow's -documentProperties property.
-     *  This slows down the query, but can be a good optimization if you know you'll need the entire
-     *  contents of each document. (This property is equivalent to "include_docs" in the CouchDB API.)
-     */
     private boolean prefetch;
-
-    /**
-     * If set to YES, disables use of the reduce function.
-     * (Equivalent to setting "?reduce=false" in the REST API.)
-     */
     private boolean mapOnly;
-
-    /**
-     * If set to YES, queries created by -createAllDocumentsQuery will include deleted documents.
-     * This property has no effect in other types of queries.
-     */
     private boolean includeDeleted;
-
-    /**
-     * If non-nil, the query will fetch only the rows with the given keys.
-     */
     private List<Object> keys;
-
-    /**
-     * If non-zero, enables grouping of results, in views that have reduce functions.
-     */
     private int groupLevel;
+    private long lastSequence;
 
     /**
      * If a query is running and the user calls stop() on this query, the future
      * will be used in order to cancel the query in progress.
      */
     protected Future updateQueryFuture;
-
-    private long lastSequence;
 
     /**
      * Constructor
@@ -193,142 +114,245 @@ public class Query {
         return database;
     }
 
+    /**
+     * Gets the maximum number of rows to return. The default value is 0, meaning 'unlimited'.
+     */
     @InterfaceAudience.Public
     public int getLimit() {
         return limit;
     }
 
+    /**
+     * Sets the maximum number of rows to return. The default value is 0, meaning 'unlimited'.
+     */
     @InterfaceAudience.Public
     public void setLimit(int limit) {
         this.limit = limit;
     }
 
-
+    /**
+     * Gets the number of initial rows to skip. Default value is 0.
+     */
     @InterfaceAudience.Public
     public int getSkip() {
         return skip;
     }
 
+    /**
+     * Sets the number of initial rows to skip. Default value is 0.
+     */
     @InterfaceAudience.Public
     public void setSkip(int skip) {
         this.skip = skip;
     }
 
+    /**
+     * Gets whether the rows be returned in descending key order. Default value is false.
+     */
     @InterfaceAudience.Public
     public boolean isDescending() {
         return descending;
     }
 
+    /**
+     * Sets whether the rows be returned in descending key order. Default value is false.
+     */
     @InterfaceAudience.Public
     public void setDescending(boolean descending) {
         this.descending = descending;
     }
 
+    /**
+     * Gets the key of the first value to return. A null value has no effect.
+     */
     @InterfaceAudience.Public
     public Object getStartKey() {
         return startKey;
     }
 
+    /**
+     * Sets the key of the first value to return. A null value has no effect.
+     */
     @InterfaceAudience.Public
     public void setStartKey(Object startKey) {
         this.startKey = startKey;
     }
 
+    /**
+     * Gets the key of the last value to return. A null value has no effect.
+     */
     @InterfaceAudience.Public
     public Object getEndKey() {
         return endKey;
     }
 
+    /**
+     * Sets the key of the last value to return. A null value has no effect.
+     */
     @InterfaceAudience.Public
     public void setEndKey(Object endKey) {
         this.endKey = endKey;
     }
 
+    /**
+     * Gets the Document id of the first value to return.
+     * A null value has no effect. This is useful if the view contains multiple
+     * identical keys, making startKey ambiguous.
+     */
     @InterfaceAudience.Public
     public String getStartKeyDocId() {
         return startKeyDocId;
     }
 
+    /**
+     * Sets the Document id of the first value to return.
+     * A null value has no effect. This is useful if the view contains multiple
+     * identical keys, making startKey ambiguous.
+     */
     @InterfaceAudience.Public
     public void setStartKeyDocId(String startKeyDocId) {
         this.startKeyDocId = startKeyDocId;
     }
 
+
+    /**
+     * Gets the Document id of the last value to return. A null value has no effect.
+     * This is useful if the view contains multiple identical keys, making endKey ambiguous.
+     */
     @InterfaceAudience.Public
     public String getEndKeyDocId() {
         return endKeyDocId;
     }
 
+    /**
+     * Sets the Document id of the last value to return. A null value has no effect.
+     * This is useful if the view contains multiple identical keys, making endKey ambiguous.
+     */
     @InterfaceAudience.Public
     public void setEndKeyDocId(String endKeyDocId) {
         this.endKeyDocId = endKeyDocId;
     }
 
+    /**
+     * Gets when a View index is updated when running a Query.
+     */
     @InterfaceAudience.Public
     public IndexUpdateMode getIndexUpdateMode() {
         return indexUpdateMode;
     }
 
+    /**
+     * Sets when a View index is updated when running a Query.
+     */
     @InterfaceAudience.Public
     public void setIndexUpdateMode(IndexUpdateMode indexUpdateMode) {
         this.indexUpdateMode = indexUpdateMode;
     }
 
+    /**
+     * Changes the behavior of a query created by -queryAllDocuments.
+     *
+     * - In mode kCBLAllDocs (the default), the query simply returns all non-deleted documents.
+     * - In mode kCBLIncludeDeleted, it also returns deleted documents.
+     * - In mode kCBLShowConflicts, the .conflictingRevisions property of each row will return the
+     *   conflicting revisions, if any, of that document.
+     * - In mode kCBLOnlyConflicts, _only_ documents in conflict will be returned.
+     *   (This mode is especially useful for use with a CBLLiveQuery, so you can be notified of
+     *   conflicts as they happen, i.e. when they're pulled in by a replication.)
+     */
     @InterfaceAudience.Public
     public AllDocsMode getAllDocsMode() {
         return allDocsMode;
     }
 
+    /**
+     * See getAllDocsMode()
+     */
     @InterfaceAudience.Public
     public void setAllDocsMode(AllDocsMode allDocsMode) {
         this.allDocsMode = allDocsMode;
     }
 
+
+    /**
+     * Gets the keys of the values to return. A null value has no effect.
+     */
     @InterfaceAudience.Public
     public List<Object> getKeys() {
         return keys;
     }
 
+    /**
+     * Sets the keys of the values to return. A null value has no effect.
+     */
     @InterfaceAudience.Public
     public void setKeys(List<Object> keys) {
         this.keys = keys;
     }
 
+    /**
+     * Gets whether to only use the map function without using the reduce function.
+     */
     @InterfaceAudience.Public
     public boolean isMapOnly() {
         return mapOnly;
     }
 
+    /**
+     * Sets whether to only use the map function without using the reduce function.
+     */
     @InterfaceAudience.Public
     public void setMapOnly(boolean mapOnly) {
         this.mapOnly = mapOnly;
     }
 
+    /**
+     * Gets whether results will be grouped in Views that have reduce functions.
+     */
     @InterfaceAudience.Public
     public int getGroupLevel() {
         return groupLevel;
     }
 
+    /**
+     * Sets whether results will be grouped in Views that have reduce functions.
+     */
     @InterfaceAudience.Public
     public void setGroupLevel(int groupLevel) {
         this.groupLevel = groupLevel;
     }
 
+    /**
+     * Gets whether to include the entire Document content with the results.
+     * The Documents can be accessed via the QueryRow's documentProperties property.
+     */
     @InterfaceAudience.Public
     public boolean shouldPrefetch() {
         return prefetch;
     }
 
+    /**
+     * Sets whether to include the entire Document content with the results.
+     * The Documents can be accessed via the QueryRow's documentProperties property.
+     */
     @InterfaceAudience.Public
     public void setPrefetch(boolean prefetch) {
         this.prefetch = prefetch;
     }
 
+    /**
+     * Gets whether Queries created via the Database createAllDocumentsQuery
+     * method will include deleted Documents. This property has no effect in other types of Queries.
+     */
     @InterfaceAudience.Public
     public boolean shouldIncludeDeleted() {
         return allDocsMode == AllDocsMode.INCLUDE_DELETED;
     }
 
+    /**
+     * Sets whether Queries created via the Database createAllDocumentsQuery
+     * method will include deleted Documents. This property has no effect in other types of Queries.
+     */
     @InterfaceAudience.Public
     public void setIncludeDeleted(boolean includeDeletedParam) {
         allDocsMode = (includeDeletedParam == true) ? AllDocsMode.INCLUDE_DELETED : AllDocsMode.ALL_DOCS;
@@ -404,6 +428,7 @@ public class Query {
     }
 
     /**
+     * The view object associated with this query
      * @exclude
      */
     @InterfaceAudience.Private
