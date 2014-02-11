@@ -55,7 +55,7 @@ public class ReplicationTest extends LiteTestCase {
 
     // Reproduces issue #167
     // https://github.com/couchbase/couchbase-lite-android/issues/167
-    public void DIStestPushPurgedDoc() throws Throwable {
+    public void testPushPurgedDoc() throws Throwable {
 
         int numBulkDocRequests = 0;
         HttpPost lastBulkDocsRequest = null;
@@ -148,7 +148,7 @@ public class ReplicationTest extends LiteTestCase {
 
     }
 
-    public void DIStestPusher() throws Throwable {
+    public void testPusher() throws Throwable {
 
         CountDownLatch replicationDoneSignal = new CountDownLatch(1);
 
@@ -272,7 +272,7 @@ public class ReplicationTest extends LiteTestCase {
 
     }
 
-    public void DIStestPusherDeletedDoc() throws Throwable {
+    public void testPusherDeletedDoc() throws Throwable {
 
         CountDownLatch replicationDoneSignal = new CountDownLatch(1);
 
@@ -384,7 +384,7 @@ public class ReplicationTest extends LiteTestCase {
 
     }
 
-    public void DIStestPuller() throws Throwable {
+    public void testPuller() throws Throwable {
 
         String docIdTimestamp = Long.toString(System.currentTimeMillis());
         final String doc1Id = String.format("doc1-%s", docIdTimestamp);
@@ -431,7 +431,7 @@ public class ReplicationTest extends LiteTestCase {
 
     }
 
-    public void DIStestPullerWithLiveQuery() throws Throwable {
+    public void testPullerWithLiveQuery() throws Throwable {
 
         // This is essentially a regression test for a deadlock
         // that was happening when the LiveQuery#onDatabaseChanged()
@@ -572,7 +572,7 @@ public class ReplicationTest extends LiteTestCase {
         }
     }
 
-    public void DIStestGetReplicator() throws Throwable {
+    public void testGetReplicator() throws Throwable {
 
         Map<String,Object> properties = new HashMap<String,Object>();
         properties.put("source", DEFAULT_TEST_DB);
@@ -596,7 +596,7 @@ public class ReplicationTest extends LiteTestCase {
 
     }
 
-    public void DIStestGetReplicatorWithAuth() throws Throwable {
+    public void testGetReplicatorWithAuth() throws Throwable {
 
         Map<String, Object> properties = getPushReplicationParsedJson();
 
@@ -670,7 +670,7 @@ public class ReplicationTest extends LiteTestCase {
 
     }
 
-    public void DIStestRunReplicationWithError() throws Exception {
+    public void testRunReplicationWithError() throws Exception {
 
         HttpClientFactory mockHttpClientFactory = new HttpClientFactory() {
             @Override
@@ -698,7 +698,7 @@ public class ReplicationTest extends LiteTestCase {
 
     }
 
-    public void DIStestReplicatorErrorStatus() throws Exception {
+    public void testReplicatorErrorStatus() throws Exception {
 
         // register bogus fb token
         Map<String,Object> facebookTokenInfo = new HashMap<String,Object>();
@@ -737,7 +737,7 @@ public class ReplicationTest extends LiteTestCase {
     }
 
 
-    public void DIStestFetchRemoteCheckpointDoc() throws Exception {
+    public void testFetchRemoteCheckpointDoc() throws Exception {
 
         HttpClientFactory mockHttpClientFactory = new HttpClientFactory() {
             @Override
@@ -775,7 +775,7 @@ public class ReplicationTest extends LiteTestCase {
 
     }
 
-    public void DIStestGoOffline() throws Exception {
+    public void testGoOffline() throws Exception {
 
         URL remote = getReplicationURL();
 
@@ -821,7 +821,7 @@ public class ReplicationTest extends LiteTestCase {
 
     }
 
-    public void DIStestBuildRelativeURLString() throws Exception {
+    public void testBuildRelativeURLString() throws Exception {
 
         String dbUrlString = "http://10.0.0.3:4984/todos/";
         Replication replicator = new Pusher(null, new URL(dbUrlString), false, null);
@@ -832,7 +832,7 @@ public class ReplicationTest extends LiteTestCase {
 
     }
 
-    public void DIStestBuildRelativeURLStringWithLeadingSlash() throws Exception {
+    public void testBuildRelativeURLStringWithLeadingSlash() throws Exception {
 
         String dbUrlString = "http://10.0.0.3:4984/todos/";
         Replication replicator = new Pusher(null, new URL(dbUrlString), false, null);
@@ -843,7 +843,7 @@ public class ReplicationTest extends LiteTestCase {
 
     }
 
-    public void DIStestChannels() throws Exception {
+    public void testChannels() throws Exception {
 
         URL remote = getReplicationURL();
         Replication replicator = database.createPullReplication(remote);
@@ -857,7 +857,7 @@ public class ReplicationTest extends LiteTestCase {
 
     }
 
-    public void DIStestChannelsMore() throws MalformedURLException, CouchbaseLiteException {
+    public void testChannelsMore() throws MalformedURLException, CouchbaseLiteException {
 
         Database  db = startDatabase();
         URL fakeRemoteURL = new URL("http://couchbase.com/no_such_db");
@@ -892,7 +892,7 @@ public class ReplicationTest extends LiteTestCase {
     }
 
 
-    public void DIStestHeaders() throws Exception {
+    public void testHeaders() throws Exception {
 
         final CustomizableMockHttpClient mockHttpClient = new CustomizableMockHttpClient();
         mockHttpClient.addResponderThrowExceptionAllRequests();
