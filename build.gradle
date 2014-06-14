@@ -6,9 +6,9 @@ apply plugin: 'eclipse'
 sourceCompatibility = 1.6
 
 repositories {
+    mavenLocal()
     maven { url 'http://files.couchbase.com/maven2/' }
     mavenCentral()
-    mavenLocal()
 }
 
 dependencies {
@@ -31,7 +31,7 @@ task createMavenDirectory(type: Exec) {
 
     ext {
         uploadUser = System.getenv("MAVEN_UPLOAD_USERNAME") + ":" + System.getenv("MAVEN_UPLOAD_PASSWORD")
-        mkcolPath  = System.getenv("MAVEN_UPLOAD_REPO_URL") + "com/couchbase/lite/java-core/" + System.getenv("MAVEN_UPLOAD_VERSION") + "/"
+        mkcolPath  = System.getenv("MAVEN_UPLOAD_REPO_URL") + "com/couchbase/lite/couchbase-lite-java-core/" + System.getenv("MAVEN_UPLOAD_VERSION") + "/"
     }
     commandLine "curl", "--user", uploadUser, "-X", "MKCOL", mkcolPath
 }
@@ -53,7 +53,7 @@ uploadArchives {
             }
             pom.version = System.getenv("MAVEN_UPLOAD_VERSION")
             pom.groupId = 'com.couchbase.lite'
-            pom.artifactId = 'java-core'
+            pom.artifactId = 'couchbase-lite-java-core'
             pom.project {
                 licenses {
                     license {
@@ -65,6 +65,16 @@ uploadArchives {
             }
         }
     }
+}
+
+task generateJavadocs(type: Javadoc) {
+    source = sourceSets.main.java.srcDirs
+    List<File> pathList = new ArrayList<File>();
+    pathList.add(file('extra/doclet/doclet.jar'))
+    options.docletpath = pathList
+    options.doclet = "ExcludeDoclet"
+    options.showFromPublic()
+    exclude "org/apache/http/**", "com/couchbase/touchdb/**"
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {

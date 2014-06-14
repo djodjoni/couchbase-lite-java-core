@@ -272,7 +272,7 @@ public final class LiveQuery extends Query implements Database.ChangeListener {
                 boolean cancelResult = rerunUpdateFuture.cancel(true);
                 Log.d(Log.TAG_QUERY, "%s: cancelled %s result: %s", LiveQuery.this, rerunUpdateFuture, cancelResult);
             }
-            rerunUpdateFuture = rerunUpdateAfterQueryFinishes();
+            rerunUpdateFuture = rerunUpdateAfterQueryFinishes(queryFuture);
             Log.d(Log.TAG_QUERY, "%s: created new rerunUpdateFuture: %s", LiveQuery.this, rerunUpdateFuture);
             return;
         }
@@ -287,6 +287,12 @@ public final class LiveQuery extends Query implements Database.ChangeListener {
                     }
                     lastError = error;
                 } else {
+
+                    if (runningState.get() == false) {
+                        Log.d(Log.TAG_QUERY, "%s: update() finished query, but running state == false.", this);
+                        return;
+                    }
+
                     if (rowsParam != null && !rowsParam.equals(rows)) {
                         setRows(rowsParam);
                         for (ChangeListener observer : observers) {
@@ -307,7 +313,7 @@ public final class LiveQuery extends Query implements Database.ChangeListener {
      * does, it will run upate() again in case the current query in flight misses
      * some of the recently added items.
      */
-    private Future rerunUpdateAfterQueryFinishes() {
+    private Future rerunUpdateAfterQueryFinishes(final Future queryFutureInProgress) {
         return getDatabase().getManager().runAsync(new Runnable() {
             @Override
             public void run() {
@@ -317,15 +323,21 @@ public final class LiveQuery extends Query implements Database.ChangeListener {
                     return;
                 }
 
-                if (queryFuture != null) {
+                if (queryFutureInProgress != null) {
                     try {
-                        queryFuture.get();
+                        queryFutureInProgress.get();
+
+                        if (runningState.get() == false) {
+                            Log.v(Log.TAG_QUERY, "%s: queryFutureInProgress.get() done, but running state == false.", this);
+                            return;
+                        }
+
                         update();
                     } catch (Exception e) {
                         if (e instanceof CancellationException) {
                             // can safely ignore these
                         } else {
-                            Log.e(Log.TAG_QUERY, "Got exception waiting for queryFuture to finish", e);
+                            Log.e(Log.TAG_QUERY, "Got exception waiting for queryFutureInProgress to finish", e);
                         }
                     }
                 }
